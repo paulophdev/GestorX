@@ -47,7 +47,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="submit" class="btn btn-primary" id="btnSalvarCupom" style="background:#111827; color:#fff;">Salvar</button>
         </div>
       </form>
     </div>
@@ -143,9 +143,12 @@
     document.getElementById('couponForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const form = e.target;
+        const btnSalvar = document.getElementById('btnSalvarCupom');
+        btnSalvar.disabled = true;
+        const originalHtml = btnSalvar.innerHTML;
+        btnSalvar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Salvando...';
         const formData = new FormData(form);
         const id = form.dataset.id;
-
         // TRATAMENTO DO VALOR DO DESCONTO
         let discountType = form.discount_type.value;
         let discountValue = form.discount_value.value;
@@ -155,7 +158,6 @@
         } else {
             formData.set('discount_value', parseInt(discountValue));
         }
-
         let url = '/api/v1/cupons';
         let method = 'POST';
         let headers = { 'Accept': 'application/json' };
@@ -176,6 +178,8 @@
             const error = await response.json();
             showToast('Erro ao salvar cupom: ' + (error.message || JSON.stringify(error)), 'error');
         }
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = originalHtml;
     });
 
     async function editCoupon(id) {
