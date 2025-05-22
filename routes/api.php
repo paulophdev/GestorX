@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\VariationController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\StockMovementController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -28,4 +29,9 @@ Route::prefix('v1')->group(function () {
 
     // Rotas de Cupons
     Route::apiResource('cupons', CouponController::class);
+
+    // Rotas de Estoque
+    Route::get('/produtos/{product}/estoque', [StockMovementController::class, 'index']);
+    Route::post('/produtos/{product}/estoque', [StockMovementController::class, 'store']);
+    Route::delete('/produtos/{product}/estoque/{stockMovement}', [StockMovementController::class, 'destroy']);
 }); 

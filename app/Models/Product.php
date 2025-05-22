@@ -20,4 +20,9 @@ class Product extends Model
     {
         return $this->hasMany(Variation::class);
     }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
 }

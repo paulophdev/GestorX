@@ -34,6 +34,9 @@
             <li class="nav-item" role="presentation">
               <button class="nav-link" id="variacoes-tab" data-bs-toggle="tab" data-bs-target="#variacoesProduto" type="button" role="tab" aria-controls="variacoesProduto" aria-selected="false">Variações</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="estoque-tab" data-bs-toggle="tab" data-bs-target="#estoqueProduto" type="button" role="tab" aria-controls="estoqueProduto" aria-selected="false">Estoque</button>
+            </li>
           </ul>
           <div class="tab-content">
             <!-- Aba Dados do Produto -->
@@ -70,6 +73,24 @@
                 <!-- Grupos de variações serão inseridos aqui -->
               </div>
               <button type="button" class="btn btn-outline-primary btn-sm mt-3" onclick="addVariationGroup()">Adicionar Grupo de Variação</button>
+            </div>
+            <!-- Aba Estoque -->
+            <div class="tab-pane fade" id="estoqueProduto" role="tabpanel" aria-labelledby="estoque-tab">
+              <div id="stockMovementsList" class="mb-3">
+                <!-- Lançamentos de estoque serão inseridos aqui via JS -->
+              </div>
+              <div class="mb-2"><strong>Total em estoque:</strong> <span id="stockTotal">0</span></div>
+              <div id="stockMovementForm" class="d-flex gap-2 align-items-end">
+                <div>
+                  <label class="form-label mb-1">Valor</label>
+                  <input type="number" step="1" class="form-control" id="stockValueInput" placeholder="Ex: 10 ou -2">
+                </div>
+                <div class="mt-2">
+                  <label class="form-label mb-1">Observação</label>
+                  <input type="text" class="form-control" id="stockNoteInput" placeholder="Opcional">
+                </div>
+                <button type="button" class="btn btn-outline-success mt-3" id="btnAdicionarEstoque">Adicionar</button>
+              </div>
             </div>
           </div>
         </div>
@@ -120,6 +141,49 @@
             } else {
                 imagePreview.src = '';
                 imagePreview.style.display = 'none';
+            }
+        });
+        // Listener para o botão de adicionar estoque
+        document.getElementById('btnAdicionarEstoque').addEventListener('click', async function(e) {
+            e.preventDefault();
+            const valueInput = document.getElementById('stockValueInput');
+            const noteInput = document.getElementById('stockNoteInput');
+            const value = parseInt(valueInput.value, 10);
+            const note = noteInput.value;
+            const form = document.getElementById('productForm');
+            const productId = form.dataset.id;
+            if (!productId) {
+                showToast('Salve o produto antes de lançar estoque!', 'error');
+                return;
+            }
+            if (!value || isNaN(value)) {
+                showToast('Informe um valor válido para o estoque!', 'error');
+                return;
+            }
+            // Desabilita botão
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Adicionando...';
+            try {
+                const response = await fetch(`/api/v1/produtos/${productId}/estoque`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ value, note })
+                });
+                if (response.ok) {
+                    valueInput.value = '';
+                    noteInput.value = '';
+                    showToast('Lançamento de estoque adicionado!', 'success');
+                    await carregarMovimentosEstoque(productId);
+                } else {
+                    const error = await response.json();
+                    showToast('Erro ao adicionar estoque: ' + (error.message || JSON.stringify(error)), 'error');
+                }
+            } catch (err) {
+                showToast('Erro ao adicionar estoque!', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Adicionar';
             }
         });
     });
@@ -220,7 +284,8 @@
         }
     }
 
-    async function editProduct(id) {
+    // Carregar lançamentos ao abrir modal de edição sem sobrescrever editProduct global
+    window.editProduct = async function(id) {
         try {
             const response = await fetch(`/api/v1/produtos/${id}`);
             const product = await response.json();
@@ -255,6 +320,7 @@
                 });
             }
             productModal.show();
+            await carregarMovimentosEstoque(id);
         } catch (error) {
             console.error('Erro ao carregar produto:', error);
         }
@@ -295,6 +361,9 @@
         imagePreview.style.display = 'none';
         // Limpar variações
         document.getElementById('variationGroups').innerHTML = '';
+        // Limpar lançamentos de estoque e total
+        document.getElementById('stockMovementsList').innerHTML = '';
+        document.getElementById('stockTotal').textContent = '0';
         productModal.show();
     }
 
@@ -357,6 +426,59 @@
           <button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">Remover</button>
         `;
         optionsDiv.appendChild(optDiv);
+    }
+
+    // Função para carregar lançamentos de estoque e atualizar total
+    async function carregarMovimentosEstoque(productId) {
+        try {
+            const response = await fetch(`/api/v1/produtos/${productId}/estoque`);
+            if (!response.ok) return;
+            const movimentos = await response.json();
+            const lista = document.getElementById('stockMovementsList');
+            let total = 0;
+            if (movimentos.length === 0) {
+                lista.innerHTML = '<div class="text-muted text-center">Nenhum lançamento de estoque.</div>';
+            } else {
+                lista.innerHTML = '<ul class="list-group mb-2">' + movimentos.map(mov => {
+                    total += parseInt(mov.value, 10);
+                    return `<li class=\"list-group-item d-flex justify-content-between align-items-center\">`
+                        + `<span>${mov.value > 0 ? '+' : ''}${mov.value} <small class=\"text-muted\">${mov.note ? mov.note : ''}</small></span>`
+                        + `<button class=\"btn btn-outline-danger btn-sm\" onclick=\"removerMovimentoEstoque(${mov.id})\">Remover</button>`
+                        + `</li>`;
+                }).join('') + '</ul>';
+            }
+            document.getElementById('stockTotal').textContent = total;
+        } catch (err) {
+            document.getElementById('stockMovementsList').innerHTML = '<div class="text-danger">Erro ao carregar lançamentos.</div>';
+        }
+    }
+    // Função global para remover lançamento
+    window.removerMovimentoEstoque = async function(id) {
+        const form = document.getElementById('productForm');
+        const productId = form.dataset.id;
+        if (!productId) return;
+        const confirm = await Swal.fire({
+            title: 'Remover lançamento?',
+            text: 'Deseja remover este lançamento de estoque?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sim, remover',
+            cancelButtonText: 'Cancelar'
+        });
+        if (!confirm.isConfirmed) return;
+        try {
+            const response = await fetch(`/api/v1/produtos/${productId}/estoque/${id}`, { method: 'DELETE' });
+            if (response.ok) {
+                showToast('Lançamento removido!', 'success');
+                await carregarMovimentosEstoque(productId);
+            } else {
+                showToast('Erro ao remover lançamento!', 'error');
+            }
+        } catch (err) {
+            showToast('Erro ao remover lançamento!', 'error');
+        }
     }
 </script>
 @endpush 
