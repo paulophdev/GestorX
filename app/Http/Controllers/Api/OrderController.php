@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
@@ -71,6 +72,9 @@ class OrderController extends Controller
                 }
             }
             DB::commit();
+            // Envia e-mail para o cliente
+            Mail::to($order->email)
+                ->send(new \App\Mail\PedidoRealizadoMail($order, $order->items));
             return response()->json([
                 'order_id' => $order->id,
                 'resumo' => $order->items()->get(['nome_produto','quantidade','preco_unitario','subtotal']),
