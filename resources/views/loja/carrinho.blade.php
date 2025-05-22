@@ -45,7 +45,7 @@
 <body>
     <nav class="loja-navbar d-flex align-items-center px-4 py-3 mb-0">
         <div class="fw-bold fs-4 me-auto">GestorX <span style="color:#38bdf8;">Loja</span></div>
-        {{-- <a href="/loja">Produtos</a> --}}
+        <a href="/" class="btn btn-outline-light btn-sm">Voltar ao Início</a>
     </nav>
     <div class="container py-4">
         {{-- <h1 class="h3 fw-bold mb-4">Carrinho</h1> --}}
