@@ -39,4 +39,5 @@ Route::prefix('v1')->group(function () {
 
     // Rotas de Pedidos
     Route::post('/pedidos', [OrderController::class, 'store']);
+    Route::post('/pedidos/webhook-status', [OrderController::class, 'webhookStatus']);
 }); 

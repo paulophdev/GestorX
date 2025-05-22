@@ -85,4 +85,24 @@ class OrderController extends Controller
             return response()->json(['error' => 'Erro ao salvar pedido', 'msg' => $e->getMessage()], 500);
         }
     }
+
+    public function webhookStatus(Request $request)
+    {
+        $data = $request->validate([
+            'id' => 'required|integer|exists:orders,id',
+            'status' => 'required|string',
+        ]);
+        $order = Order::find($data['id']);
+        if (!$order) {
+            return response()->json(['error' => 'Pedido não encontrado'], 404);
+        }
+        if ($data['status'] === 'cancelado') {
+            $order->delete();
+            return response()->json(['message' => 'Pedido removido com sucesso.']);
+        } else {
+            $order->status = $data['status'];
+            $order->save();
+            return response()->json(['message' => 'Status atualizado com sucesso.']);
+        }
+    }
 } 
