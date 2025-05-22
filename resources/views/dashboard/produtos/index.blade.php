@@ -75,7 +75,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary" style="background:#111827; color:#fff;">Salvar</button>
+          <button type="submit" class="btn btn-primary" id="btnSalvarProduto" style="background:#111827; color:#fff;">Salvar</button>
         </div>
       </form>
     </div>
@@ -163,6 +163,10 @@
     }
 
     async function saveProduct(formData, id = null) {
+        const btnSalvar = document.getElementById('btnSalvarProduto');
+        btnSalvar.disabled = true;
+        const originalHtml = btnSalvar.innerHTML;
+        btnSalvar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Salvando...';
         // Corrigir o valor do preço para float antes de enviar
         if (formData.get('price')) {
             formData.set('price', parsePriceToFloat(formData.get('price')));
@@ -189,6 +193,9 @@
             }
         } catch (error) {
             console.error('Erro ao salvar produto:', error);
+        } finally {
+            btnSalvar.disabled = false;
+            btnSalvar.innerHTML = originalHtml;
         }
     }
 
