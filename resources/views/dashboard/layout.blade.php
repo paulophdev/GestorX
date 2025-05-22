@@ -29,7 +29,6 @@
             <a class="navbar-brand fw-bold" href="/dashboard/produtos">GestorX</a>
             <div class="d-flex gap-3">
                 <a class="nav-link text-white fw-semibold" href="/dashboard/produtos">Produtos</a>
-                <a class="nav-link text-white fw-semibold" href="/dashboard/pedidos">Pedidos</a>
                 <a class="nav-link text-white fw-semibold" href="/dashboard/cupons">Cupons</a>
             </div>
         </div>

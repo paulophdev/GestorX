@@ -5,7 +5,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 fw-bold">Cupons</h1>
-    <button class="btn btn-success" onclick="openCouponModal()">Novo Cupom</button>
+    <button class="btn btn-success" style="background:#111827; color:#fff;" onclick="openCouponModal()">Novo Cupom</button>
 </div>
 <ul id="couponsList" class="list-group mb-4">
     <!-- Os cupons serão inseridos aqui via JavaScript -->
@@ -67,7 +67,7 @@
         const discountValue = form.elements['discount_value'];
 
         function setDiscountMask() {
-            discountValue.value = '';
+            // discountValue.value = ''; // Removido para não apagar valor ao editar
             discountValue.removeAttribute('max');
             discountValue.removeAttribute('min');
             discountValue.removeAttribute('step');
@@ -117,11 +117,17 @@
                 + '</li>';
         } else {
             list.innerHTML = coupons.map(coupon => `
-                <li class="list-group-item">
-                    O Cupom <span class="fw-bold">${coupon.code}</span> de 
-                    <span class="fw-bold">${coupon.discount_type === 'percent' ? coupon.discount_value + '%' : 'R$ ' + Number(coupon.discount_value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-                    expira em <span>${coupon.expires_at ? (() => { const [y, m, d] = coupon.expires_at.split('-'); return `${d}/${m}/${y}`; })() : 'sem data'}</span>
-                    e já foi utilizado <span>${coupon.used_count ?? 0}/${coupon.usage_limit ?? '∞'}</span>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        O Cupom <span class="fw-bold">${coupon.code}</span> de 
+                        <span class="fw-bold">${coupon.discount_type === 'percent' ? coupon.discount_value + '%' : 'R$ ' + Number(coupon.discount_value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                        expira em <span>${coupon.expires_at ? (() => { const [y, m, d] = coupon.expires_at.split('-'); return `${d}/${m}/${y}`; })() : 'sem data'}</span>
+                        e já foi utilizado <span>${coupon.used_count ?? 0}/${coupon.usage_limit ?? '∞'}</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm me-2" onclick="editCoupon(${coupon.id})">Editar</button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteCoupon(${coupon.id})">Excluir</button>
+                    </div>
                 </li>
             `).join('');
         }

@@ -10,7 +10,12 @@
 <div id="productsList" class="row g-4">
     <!-- Os produtos serão inseridos aqui via JavaScript -->
 </div>
-<div id="noProductsMsg" class="alert alert-info text-center d-none mt-5">Nenhum produto cadastrado ainda.</div>
+<div id="noProductsMsg" class="d-none mt-5">
+    <li class="list-group-item text-center text-muted py-5" style="font-size:1.2em; border:none; background:transparent; list-style:none;">
+        <div style="font-size:2.5em;">📦</div>
+        <div class="mt-2">Nenhum produto cadastrado ainda.</div>
+    </li>
+</div>
 <!-- Modal de Cadastro/Edição -->
 <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
   <div class="modal-dialog modal-lg">
