@@ -15,6 +15,8 @@ class Order extends Model
         'frete',
         'total',
         'status',
+        'cupom_id',
+        'desconto',
     ];
 
     public function items()

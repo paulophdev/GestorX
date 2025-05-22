@@ -27,8 +27,9 @@
 <body>
     <nav class="navbar navbar-expand-lg mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/dashboard/produtos">GestorX</a>
+            <a class="navbar-brand fw-bold" href="/dashboard/pedidos">GestorX</a>
             <div class="d-flex gap-3">
+                <a class="nav-link text-white fw-semibold" href="/dashboard/pedidos">Pedidos</a>
                 <a class="nav-link text-white fw-semibold" href="/dashboard/produtos">Produtos</a>
                 <a class="nav-link text-white fw-semibold" href="/dashboard/cupons">Cupons</a>
             </div>

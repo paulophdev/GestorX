@@ -30,6 +30,7 @@ Route::prefix('v1')->group(function () {
 
     // Rotas de Cupons
     Route::apiResource('cupons', CouponController::class);
+    Route::get('/cupons/validar/{codigo}', [CouponController::class, 'validar']);
 
     // Rotas de Estoque
     Route::get('/produtos/{product}/estoque', [StockMovementController::class, 'index']);

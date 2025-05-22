@@ -56,6 +56,10 @@
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    // Variáveis globais para cupom
+    let desconto = Number(localStorage.getItem('desconto')) || 0;
+    let cupomAplicado = localStorage.getItem('cupomAplicado') || null;
+    let cupomId = localStorage.getItem('cupomId') || null;
     function renderCart() {
         const cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const cartContent = document.getElementById('cartContent');
@@ -175,6 +179,21 @@
                 </form>
             </div>
         </div>
+        <!-- Bloco de cupom -->
+        <div class='card mb-4 mx-auto' style='max-width:900px;'>
+            <div class='card-body'>
+                <h5 class='card-title mb-3'>Cupom de Desconto</h5>
+                <div class='row g-2'>
+                    <div class='col-md-8'>
+                        <input type='text' class='form-control' id='cupom' placeholder='Digite seu cupom' maxlength='20'>
+                    </div>
+                    <div class='col-md-4'>
+                        <button class='btn btn-outline-primary w-100' id='btnCupom'>Aplicar Cupom</button>
+                    </div>
+                </div>
+                <div id='cupomMensagem' class='mt-2 text-muted'></div>
+            </div>
+        </div>
         <!-- Bloco de pagamento -->
         <div class='card mb-4 mx-auto' style='max-width:900px;'>
             <div class='card-body'>
@@ -187,6 +206,10 @@
                     <div class='d-flex gap-2 align-items-center'>
                         <span class='text-muted'>Frete:</span>
                         <span class='fw-bold' id='freteResumo'></span>
+                    </div>
+                    <div class='d-flex gap-2 align-items-center' id='descontoContainer' style='display:none;'>
+                        <span class='text-muted'>Desconto:</span>
+                        <span class='fw-bold' id='descontoResumo'></span>
                     </div>
                 </div>
                 <hr>
@@ -210,11 +233,81 @@
         const freteResumo = document.getElementById('freteResumo');
         const totalGeralResumo = document.getElementById('totalGeralResumo');
         const resumoSubtotal = document.getElementById('resumoSubtotal');
-        if (freteResumo && totalGeralResumo && resumoSubtotal) {
-            freteResumo.textContent = frete === 0 ? 'Grátis' : `R$ ${frete.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
-            totalGeralResumo.textContent = `R$ ${(total + frete).toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
-            resumoSubtotal.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+        const descontoContainer = document.getElementById('descontoContainer');
+        const descontoResumo = document.getElementById('descontoResumo');
+        const cupomInput = document.getElementById('cupom');
+        const btnCupom = document.getElementById('btnCupom');
+        const cupomMensagem = document.getElementById('cupomMensagem');
+
+        function atualizarTotais() {
+            if (freteResumo && totalGeralResumo && resumoSubtotal) {
+                freteResumo.textContent = frete === 0 ? 'Grátis' : `R$ ${frete.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                const totalGeral = total + frete - desconto;
+                totalGeralResumo.textContent = `R$ ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                resumoSubtotal.textContent = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                
+                if (desconto > 0) {
+                    descontoContainer.style.display = 'flex';
+                    descontoResumo.textContent = `-R$ ${desconto.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                } else {
+                    descontoContainer.style.display = 'none';
+                }
+            }
         }
+
+        if (btnCupom) {
+            btnCupom.addEventListener('click', async function() {
+                const cupom = cupomInput.value.trim().toUpperCase();
+                if (!cupom) {
+                    cupomMensagem.textContent = 'Digite um cupom válido';
+                    return;
+                }
+
+                if (cupomAplicado) {
+                    // Remover cupom
+                    cupomAplicado = null;
+                    desconto = 0;
+                    cupomId = null;
+                    localStorage.removeItem('cupomAplicado');
+                    localStorage.removeItem('desconto');
+                    localStorage.removeItem('cupomId');
+                    cupomInput.value = '';
+                    cupomInput.disabled = false;
+                    btnCupom.textContent = 'Aplicar Cupom';
+                    btnCupom.classList.remove('btn-danger');
+                    btnCupom.classList.add('btn-outline-primary');
+                    cupomMensagem.textContent = '';
+                    atualizarTotais();
+                    return;
+                }
+
+                try {
+                    const resp = await fetch(`/api/v1/cupons/validar/${cupom}`);
+                    const data = await resp.json();
+                    
+                    if (resp.ok && data.valido) {
+                        cupomAplicado = cupom;
+                        desconto = data.desconto;
+                        cupomId = data.id || '';
+                        localStorage.setItem('cupomAplicado', cupomAplicado);
+                        localStorage.setItem('desconto', desconto);
+                        localStorage.setItem('cupomId', cupomId);
+                        cupomInput.disabled = true;
+                        btnCupom.textContent = 'Remover Cupom';
+                        btnCupom.classList.remove('btn-outline-primary');
+                        btnCupom.classList.add('btn-danger');
+                        cupomMensagem.textContent = `Cupom aplicado com sucesso! Desconto de R$ ${desconto.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                        atualizarTotais();
+                    } else {
+                        cupomMensagem.textContent = data.mensagem || 'Cupom inválido';
+                    }
+                } catch (e) {
+                    cupomMensagem.textContent = 'Erro ao validar cupom';
+                }
+            });
+        }
+
+        atualizarTotais();
     }
     function limparCarrinho() {
         localStorage.removeItem('cart');
@@ -298,7 +391,11 @@
                 let frete = 20;
                 if (subtotal >= 52 && subtotal <= 166.59) frete = 15;
                 else if (subtotal > 200) frete = 0;
-                const total = subtotal + frete;
+                // Cupom
+                let cupom_id = localStorage.getItem('cupomId');
+                if (cupom_id === null || cupom_id === 'null' || cupom_id === '') cupom_id = null;
+                const descontoCupom = Number(localStorage.getItem('desconto')) || 0;
+                const total = subtotal + frete - descontoCupom;
                 // Montar itens para API
                 const itens = cart.map(item => ({
                     product_id: item.id,
@@ -321,6 +418,8 @@
                             endereco: endereco,
                             subtotal: subtotal,
                             frete: frete,
+                            desconto: descontoCupom,
+                            cupom_id: cupom_id ? Number(cupom_id) : undefined,
                             total: total,
                             itens: itens
                         })

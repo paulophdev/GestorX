@@ -64,4 +64,45 @@ class CouponController extends Controller
         $cupon->delete();
         return response()->json(null, 204);
     }
+
+    public function validar($codigo)
+    {
+        $cupom = Coupon::where('code', strtoupper($codigo))
+            ->where(function($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>=', now());
+            })
+            ->first();
+
+        if (!$cupom) {
+            return response()->json([
+                'valido' => false,
+                'mensagem' => 'Cupom inválido ou expirado'
+            ], 400);
+        }
+
+        // Verifica se o cupom já foi usado o máximo de vezes
+        if ($cupom->usage_limit && $cupom->used_count >= $cupom->usage_limit) {
+            return response()->json([
+                'valido' => false,
+                'mensagem' => 'Cupom atingiu o limite máximo de usos'
+            ], 400);
+        }
+
+        // Calcula o desconto baseado no tipo do cupom
+        $subtotal = request()->subtotal ?? 0;
+        $desconto = 0;
+        if ($cupom->discount_type === 'percent') {
+            $desconto = ($cupom->discount_value / 100) * $subtotal;
+        } else {
+            $desconto = $cupom->discount_value;
+        }
+
+        return response()->json([
+            'valido' => true,
+            'id' => $cupom->id,
+            'desconto' => $desconto,
+            'mensagem' => 'Cupom aplicado com sucesso!'
+        ]);
+    }
 }

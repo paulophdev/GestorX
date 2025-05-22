@@ -21,6 +21,8 @@ class OrderController extends Controller
             'endereco' => 'required|string',
             'subtotal' => 'required|numeric',
             'frete' => 'required|numeric',
+            'desconto' => 'nullable|numeric',
+            'cupom_id' => 'nullable|integer|exists:coupons,id',
             'total' => 'required|numeric',
             'itens' => 'required|array|min:1',
             'itens.*.product_id' => 'required|integer|exists:products,id',
@@ -39,9 +41,12 @@ class OrderController extends Controller
                 'endereco' => $data['endereco'],
                 'subtotal' => $data['subtotal'],
                 'frete' => $data['frete'],
+                'cupom_id' => $data['cupom_id'] ?? null,
+                'desconto' => $data['desconto'] ?? 0,
                 'total' => $data['total'],
                 'status' => 'novo',
             ]);
+            
             foreach ($data['itens'] as $item) {
                 OrderItem::create([
                     'order_id' => $order->id,
@@ -57,6 +62,13 @@ class OrderController extends Controller
                     'value' => -$item['quantidade'],
                     'note' => 'Pedido #' . $order->id,
                 ]);
+            }
+            // Atualiza o used_count do cupom, se houver
+            if (!empty($data['cupom_id'])) {
+                $cupom = \App\Models\Coupon::find($data['cupom_id']);
+                if ($cupom) {
+                    $cupom->increment('used_count');
+                }
             }
             DB::commit();
             return response()->json([
