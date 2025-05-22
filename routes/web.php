@@ -21,3 +21,10 @@ Route::get('/loja', function () {
 Route::get('/carrinho', function () {
     return view('loja.carrinho');
 });
+
+Route::prefix('dashboard')->name('dashboard.')->group(function () {
+    // Rotas de Pedidos
+    Route::get('/pedidos', [App\Http\Controllers\Dashboard\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/pedidos/{order}', [App\Http\Controllers\Dashboard\OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/pedidos/{order}/status', [App\Http\Controllers\Dashboard\OrderController::class, 'updateStatus'])->name('orders.update-status');
+});
