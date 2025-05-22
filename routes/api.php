@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\VariationController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\StockMovementController;
+use App\Http\Controllers\Api\OrderController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -34,4 +35,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/produtos/{product}/estoque', [StockMovementController::class, 'index']);
     Route::post('/produtos/{product}/estoque', [StockMovementController::class, 'store']);
     Route::delete('/produtos/{product}/estoque/{stockMovement}', [StockMovementController::class, 'destroy']);
+
+    // Rotas de Pedidos
+    Route::post('/pedidos', [OrderController::class, 'store']);
 }); 

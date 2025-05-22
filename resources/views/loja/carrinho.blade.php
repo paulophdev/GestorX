@@ -275,6 +275,87 @@
             });
             btnFinalizar.disabled = !ok;
         }
+        // FINALIZAR PEDIDO
+        if (btnFinalizar) {
+            btnFinalizar.addEventListener('click', async function() {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                if (!cart.length) return;
+                // Dados do cliente
+                const nome = document.getElementById('cliente_nome').value.trim();
+                const telefone = document.getElementById('cliente_telefone').value.trim();
+                const email = document.getElementById('cliente_email').value.trim();
+                // Endereço por extenso
+                const endereco =
+                    'CEP: ' + document.getElementById('cep').value.trim() + '\n' +
+                    'Endereço: ' + document.getElementById('endereco').value.trim() + ', ' + document.getElementById('numero').value.trim() + '\n' +
+                    'Bairro: ' + document.getElementById('bairro').value.trim() + '\n' +
+                    'Cidade: ' + document.getElementById('cidade').value.trim() + ' - ' + document.getElementById('estado').value.trim() + '\n' +
+                    (document.getElementById('complemento').value.trim() ? 'Complemento: ' + document.getElementById('complemento').value.trim() + '\n' : '') +
+                    (document.getElementById('referencia').value.trim() ? 'Ponto de Referência: ' + document.getElementById('referencia').value.trim() + '\n' : '');
+                // Subtotal, frete, total
+                let subtotal = 0;
+                cart.forEach(item => { subtotal += item.price * item.qty; });
+                let frete = 20;
+                if (subtotal >= 52 && subtotal <= 166.59) frete = 15;
+                else if (subtotal > 200) frete = 0;
+                const total = subtotal + frete;
+                // Montar itens para API
+                const itens = cart.map(item => ({
+                    product_id: item.id,
+                    nome_produto: item.name,
+                    quantidade: item.qty,
+                    preco_unitario: item.price,
+                    subtotal: item.price * item.qty
+                }));
+                // Enviar para API
+                btnFinalizar.disabled = true;
+                btnFinalizar.textContent = 'Enviando...';
+                try {
+                    const resp = await fetch('/api/v1/pedidos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                        body: JSON.stringify({
+                            nome_cliente: nome,
+                            telefone: telefone,
+                            email: email,
+                            endereco: endereco,
+                            subtotal: subtotal,
+                            frete: frete,
+                            total: total,
+                            itens: itens
+                        })
+                    });
+                    const data = await resp.json();
+                    if (resp.ok && data.order_id) {
+                        // Limpa carrinho
+                        localStorage.removeItem('cart');
+                        // Monta mensagem para WhatsApp
+                        let msg = `Olá! Fiz um pedido na loja.\n\n`;
+                        msg += `Pedido nº: ${data.order_id}\n`;
+                        msg += `Nome: ${nome}\nTelefone: ${telefone}\nE-mail: ${email}\n`;
+                        msg += `Endereço:\n${endereco}\n`;
+                        msg += `Itens:\n`;
+                        data.resumo.forEach(item => {
+                            msg += `- ${item.quantidade}x ${item.nome_produto} (R$ ${Number(item.preco_unitario).toLocaleString('pt-BR', {minimumFractionDigits:2})}) = R$ ${Number(item.subtotal).toLocaleString('pt-BR', {minimumFractionDigits:2})}\n`;
+                        });
+                        msg += `\nSubtotal: R$ ${subtotal.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                        msg += `\nFrete: ${frete === 0 ? 'Grátis' : 'R$ ' + frete.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                        msg += `\nTotal: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                        // Redireciona para WhatsApp (coloque o número desejado abaixo)
+                        const numeroLoja = '5575992419101'; // Troque pelo número da loja
+                        window.location.href = `https://wa.me/${numeroLoja}?text=${encodeURIComponent(msg)}`;
+                    } else {
+                        alert('Erro ao finalizar pedido: ' + (data.error || 'Tente novamente.'));
+                        btnFinalizar.disabled = false;
+                        btnFinalizar.textContent = 'Finalizar Pedido';
+                    }
+                } catch (e) {
+                    alert('Erro ao finalizar pedido.');
+                    btnFinalizar.disabled = false;
+                    btnFinalizar.textContent = 'Finalizar Pedido';
+                }
+            });
+        }
     });
     </script>
 </body>
