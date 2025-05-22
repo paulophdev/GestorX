@@ -17,3 +17,7 @@ Route::get('/dashboard/cupons', function () {
 Route::get('/loja', function () {
     return view('loja.index');
 });
+
+Route::get('/carrinho', function () {
+    return view('loja.carrinho');
+});

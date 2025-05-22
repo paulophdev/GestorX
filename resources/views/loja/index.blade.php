@@ -149,7 +149,6 @@
                 if (skeletons) skeletons.style.display = 'none';
             } else {
                 noProductsMsg.classList.add('d-none');
-                if (skeletons) skeletons.style.display = 'none';
                 // Para cada produto, buscar o total em estoque
                 const estoquePromises = products.map(async (product) => {
                     const estoqueResp = await fetch(`/api/v1/produtos/${product.id}/estoque`);
@@ -159,7 +158,8 @@
                     return { ...product, estoque: total };
                 });
                 const produtosComEstoque = await Promise.all(estoquePromises);
-                list.innerHTML = produtosComEstoque.map(product => `
+                // Monta o HTML dos cards
+                const cardsHtml = produtosComEstoque.map(product => `
                     <div class=\"col-md-4 col-lg-3\">
                       <div class=\"card h-100\" style=\"border:1px solid #e5e7eb; border-radius:1rem; background:#fff; box-shadow:none;\">
                         <img src=\"${product.image ? '/storage/' + product.image : 'https://via.placeholder.com/300x200?text=Sem+Imagem'}\" class=\"card-img-top\" alt=\"${product.name}\" style=\"border-radius:1rem 1rem 0 0;\">
@@ -186,7 +186,22 @@
                       </div>
                     </div>
                 `).join('');
-                // Adiciona listeners para os botões + e -
+                // Pré-carrega todas as imagens
+                const images = [];
+                produtosComEstoque.forEach(product => {
+                    const src = product.image ? '/storage/' + product.image : 'https://via.placeholder.com/300x200?text=Sem+Imagem';
+                    images.push(new Promise(resolve => {
+                        const img = new window.Image();
+                        img.onload = () => resolve();
+                        img.onerror = () => resolve();
+                        img.src = src;
+                    }));
+                });
+                await Promise.all(images);
+                // Só agora mostra os cards e esconde os skeletons
+                list.innerHTML = cardsHtml;
+                if (skeletons) skeletons.style.display = 'none';
+                // Adiciona listeners para os botões + e - e atualiza valores
                 const updateBtnCartValue = (id, price) => {
                     const input = document.getElementById('qty_' + id);
                     const span = document.getElementById('btnCartValue_' + id);
@@ -220,8 +235,25 @@
     // Adiciona função global para simular adicionar ao carrinho
     window.adicionarAoCarrinho = function(id) {
         const input = document.getElementById('qty_' + id);
-        const qtd = input ? input.value : 1;
-        alert('Produto ' + id + ' adicionado ao carrinho! Quantidade: ' + qtd);
+        const qtd = input ? parseInt(input.value) : 1;
+        // Pega dados do produto no card
+        const card = input.closest('.card');
+        const name = card.querySelector('.card-title').textContent;
+        const price = Number(card.querySelector('.card-text.text-muted').textContent.replace('R$','').replace(',','.'));
+        const image = card.querySelector('img').src;
+        // Monta item
+        const item = { id, name, price, qty: qtd, image };
+        // Salva no localStorage (pode acumular se já existir)
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const idx = cart.findIndex(i => i.id == id);
+        if (idx >= 0) {
+            cart[idx].qty += qtd;
+        } else {
+            cart.push(item);
+        }
+        localStorage.setItem('cart', JSON.stringify(cart));
+        // Redireciona para o carrinho
+        window.location.href = '/carrinho';
     }
     </script>
 </body>
