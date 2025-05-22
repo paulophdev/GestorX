@@ -12,7 +12,13 @@
 
 ## Itens do Pedido
 @foreach($itens as $item)
-- {{ $item->quantidade }}x {{ $item->nome_produto }} (R$ {{ number_format($item->preco_unitario, 2, ',', '.') }}) = R$ {{ number_format($item->subtotal, 2, ',', '.') }}
+- {{ $item->quantidade }}x {{ $item->nome_produto }}
+@if($item->variacoes)
+    @foreach($item->variacoes as $grupo => $valor)
+    - {{ $grupo }}: {{ $valor }}
+    @endforeach
+@endif
+(R$ {{ number_format($item->preco_unitario, 2, ',', '.') }}) = R$ {{ number_format($item->subtotal, 2, ',', '.') }}
 @endforeach
 
 ---

@@ -13,6 +13,11 @@ class OrderItem extends Model
         'quantidade',
         'preco_unitario',
         'subtotal',
+        'variacoes',
+    ];
+
+    protected $casts = [
+        'variacoes' => 'array'
     ];
 
     public function order()

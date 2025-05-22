@@ -48,7 +48,16 @@
                             <tbody>
                                 @foreach($order->items as $item)
                                 <tr>
-                                    <td>{{ $item->nome_produto }}</td>
+                                    <td>
+                                        {{ $item->nome_produto }}
+                                        @if($item->variacoes)
+                                            <div class="mt-1" style="font-size:0.85em; color:#6b7280;">
+                                                @foreach($item->variacoes as $grupo => $valor)
+                                                    <div><small>{{ $grupo }}: {{ $valor }}</small></div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </td>
                                     <td>{{ $item->quantidade }}</td>
                                     <td>R$ {{ number_format($item->preco_unitario, 2, ',', '.') }}</td>
                                     <td>R$ {{ number_format($item->subtotal, 2, ',', '.') }}</td>

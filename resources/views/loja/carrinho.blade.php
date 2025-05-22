@@ -96,7 +96,16 @@
                                 total += subtotal;
                                 return `<tr>
                                     <td><img src='${item.image}' style='width:60px; height:60px; object-fit:cover; border-radius:0.5rem;'></td>
-                                    <td>${item.name}</td>
+                                    <td>
+                                        ${item.name}
+                                        ${item.variations ? `
+                                            <div class="mt-1" style="font-size:0.85em; color:#6b7280;">
+                                                ${Object.entries(item.variations).map(([group, value]) => `
+                                                    <div><small>${group}: ${value}</small></div>
+                                                `).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </td>
                                     <td>${item.qty}</td>
                                     <td>R$ ${item.price.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
                                     <td>R$ ${(subtotal).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
@@ -406,7 +415,8 @@
                     nome_produto: item.name,
                     quantidade: item.qty,
                     preco_unitario: item.price,
-                    subtotal: item.price * item.qty
+                    subtotal: item.price * item.qty,
+                    variacoes: item.variations || null
                 }));
                 // Enviar para API
                 btnFinalizar.disabled = true;
@@ -439,7 +449,11 @@
                         msg += `Endereço:\n${endereco}\n`;
                         msg += `Itens:\n`;
                         data.resumo.forEach(item => {
-                            msg += `- ${item.quantidade}x ${item.nome_produto} (R$ ${Number(item.preco_unitario).toLocaleString('pt-BR', {minimumFractionDigits:2})}) = R$ ${Number(item.subtotal).toLocaleString('pt-BR', {minimumFractionDigits:2})}\n`;
+                            msg += `- ${item.quantidade}x ${item.nome_produto}`;
+                            if (item.variacoes) {
+                                msg += ` (${Object.entries(item.variacoes).map(([group, value]) => `${group}: ${value}`).join(', ')})`;
+                            }
+                            msg += ` (R$ ${Number(item.preco_unitario).toLocaleString('pt-BR', {minimumFractionDigits:2})}) = R$ ${Number(item.subtotal).toLocaleString('pt-BR', {minimumFractionDigits:2})}\n`;
                         });
                         msg += `\nSubtotal: R$ ${subtotal.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
                         msg += `\nFrete: ${frete === 0 ? 'Grátis' : 'R$ ' + frete.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;

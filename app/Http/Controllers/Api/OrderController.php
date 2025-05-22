@@ -31,6 +31,7 @@ class OrderController extends Controller
             'itens.*.quantidade' => 'required|integer|min:1',
             'itens.*.preco_unitario' => 'required|numeric',
             'itens.*.subtotal' => 'required|numeric',
+            'itens.*.variacoes' => 'nullable|array',
         ]);
 
         DB::beginTransaction();
@@ -56,6 +57,7 @@ class OrderController extends Controller
                     'quantidade' => $item['quantidade'],
                     'preco_unitario' => $item['preco_unitario'],
                     'subtotal' => $item['subtotal'],
+                    'variacoes' => $item['variacoes'] ?? null,
                 ]);
                 // Abate estoque
                 StockMovement::create([

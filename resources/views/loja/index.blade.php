@@ -167,6 +167,24 @@
                           <h5 class=\"card-title\" style=\"color:#111827; font-weight:600;\">${product.name}</h5>
                           <p class=\"card-text mb-2\" style=\"color:#6b7280; font-size:0.95em;\">${product.description ? product.description : ''}</p>
                           <p class=\"card-text text-muted mb-2\" style=\"color:#6b7280;\">R$ ${Number(product.price).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                          ${product.variations && product.variations.length > 0 ? `
+                            <div class=\"mb-3\">
+                              ${Object.entries(product.variations.reduce((acc, v) => {
+                                const group = v.group || '';
+                                if (!acc[group]) acc[group] = [];
+                                acc[group].push(v.name);
+                                return acc;
+                              }, {})).map(([group, options]) => `
+                                <div class=\"mb-2\">
+                                  <label class=\"form-label mb-1\" style=\"font-size:0.9em; color:#4b5563;\">${group}</label>
+                                  <select class=\"form-select form-select-sm\" id=\"var_${product.id}_${group.replace(/\s+/g, '_')}\">
+                                    <option value=\"\">Selecione...</option>
+                                    ${options.map(opt => `<option value=\"${opt}\">${opt}</option>`).join('')}
+                                  </select>
+                                </div>
+                              `).join('')}
+                            </div>
+                          ` : ''}
                           <div class=\"mb-2\">
                             <span class=\"badge ${product.estoque > 0 ? 'bg-success' : 'bg-danger'}\">
                               ${product.estoque > 0 ? 'Em estoque' : 'Sem estoque'}
@@ -241,11 +259,30 @@
         const name = card.querySelector('.card-title').textContent;
         const price = Number(card.querySelector('.card-text.text-muted').textContent.replace('R$','').replace(',','.'));
         const image = card.querySelector('img').src;
+        
+        // Coleta as variações selecionadas
+        const variations = {};
+        card.querySelectorAll('select[id^="var_' + id + '_"]').forEach(select => {
+            const group = select.id.replace('var_' + id + '_', '').replace(/_/g, ' ');
+            const value = select.value;
+            if (value) {
+                variations[group] = value;
+            }
+        });
+
         // Monta item
-        const item = { id, name, price, qty: qtd, image };
+        const item = { 
+            id, 
+            name, 
+            price, 
+            qty: qtd, 
+            image,
+            variations: Object.keys(variations).length > 0 ? variations : null
+        };
+
         // Salva no localStorage (pode acumular se já existir)
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const idx = cart.findIndex(i => i.id == id);
+        const idx = cart.findIndex(i => i.id == id && JSON.stringify(i.variations) === JSON.stringify(variations));
         if (idx >= 0) {
             cart[idx].qty += qtd;
         } else {
