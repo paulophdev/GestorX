@@ -100,9 +100,14 @@
         </div>
         <div class='d-flex justify-content-end align-items-center gap-3 mt-3'>
             <span class='fs-5 fw-bold'>Total: R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:2})}</span>
+            <button class='btn btn-danger btn-lg' onclick='limparCarrinho()'>Limpar Carrinho</button>
             <button class='btn btn-success btn-lg' disabled>Finalizar Pedido</button>
         </div>
         `;
+    }
+    function limparCarrinho() {
+        localStorage.removeItem('cart');
+        renderCart();
     }
     document.addEventListener('DOMContentLoaded', renderCart);
     </script>
