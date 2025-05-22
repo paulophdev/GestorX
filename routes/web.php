@@ -13,3 +13,7 @@ Route::get('/dashboard/produtos', function () {
 Route::get('/dashboard/cupons', function () {
     return view('dashboard.cupons.index');
 });
+
+Route::get('/loja', function () {
+    return view('loja.index');
+});
