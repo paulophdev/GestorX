@@ -27,6 +27,7 @@ class CouponController extends Controller
             'discount_value' => 'required|numeric|min:0',
             'expires_at' => 'nullable|date',
             'usage_limit' => 'nullable|integer|min:1',
+            'min_subtotal' => 'nullable|numeric|min:0',
         ]);
         $coupon = Coupon::create($data);
         return response()->json($coupon, 201);
@@ -51,6 +52,7 @@ class CouponController extends Controller
             'discount_value' => 'required|numeric|min:0',
             'expires_at' => 'nullable|date',
             'usage_limit' => 'nullable|integer|min:1',
+            'min_subtotal' => 'nullable|numeric|min:0',
         ]);
         $cupon->update($data);
         return response()->json($cupon);

@@ -37,6 +37,11 @@
             <input type="number" name="discount_value" class="form-control" required min="0" step="0.01">
           </div>
           <div class="mb-3">
+            <label class="form-label">Valor Mínimo do Subtotal</label>
+            <input type="text" name="min_subtotal" class="form-control" placeholder="R$ 0,00">
+            <small class="text-muted">Deixe em branco para não ter valor mínimo</small>
+          </div>
+          <div class="mb-3">
             <label class="form-label">Data de Expiração</label>
             <input type="date" name="expires_at" class="form-control">
           </div>
@@ -65,6 +70,19 @@
         const form = document.getElementById('couponForm');
         const discountType = form.elements['discount_type'];
         const discountValue = form.elements['discount_value'];
+        const minSubtotal = form.elements['min_subtotal'];
+
+        // Máscara para valor mínimo do subtotal
+        minSubtotal.oninput = function(e) {
+            let v = e.target.value.replace(/\D/g, '');
+            v = (parseInt(v, 10) || 0).toString();
+            if (v.length < 3) v = v.padStart(3, '0');
+            let reais = v.slice(0, v.length - 2);
+            let centavos = v.slice(-2);
+            reais = reais.replace(/^0+(?!$)/, '');
+            reais = reais.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            e.target.value = 'R$ ' + reais + ',' + centavos;
+        };
 
         function setDiscountMask() {
             // discountValue.value = ''; // Removido para não apagar valor ao editar
@@ -119,9 +137,8 @@
             list.innerHTML = coupons.map(coupon => `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
-                        O Cupom <span class="fw-bold">${coupon.code}</span> de 
-                        <span class="fw-bold">${coupon.discount_type === 'percent' ? coupon.discount_value + '%' : 'R$ ' + Number(coupon.discount_value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-                        expira em <span>${coupon.expires_at ? (() => { const [y, m, d] = coupon.expires_at.split('-'); return `${d}/${m}/${y}`; })() : 'sem data'}</span>
+                        O Cupom <span class="fw-bold">${coupon.code}</span> de <span class="fw-bold">${Number(coupon.discount_value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}${coupon.discount_type === 'percent' ? '%' : ''}</span> expira em <span>${coupon.expires_at ? (() => { const [y, m, d] = coupon.expires_at.split('-'); return `${d}/${m}/${y}`; })() : 'sem data'}</span>,
+                        aplicado ${coupon.min_subtotal ? `apenas para pedidos com valor mínimo de <span class='fw-bold'>R$ ${Number(coupon.min_subtotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>` : 'para pedidos de qualquer valor'}
                         e já foi utilizado <span>${coupon.used_count ?? 0}/${coupon.usage_limit ?? '∞'}</span>
                     </div>
                     <div>
@@ -157,6 +174,14 @@
             formData.set('discount_value', parseFloat(discountValue));
         } else {
             formData.set('discount_value', parseInt(discountValue));
+        }
+        // TRATAMENTO DO VALOR MÍNIMO DO SUBTOTAL
+        let minSubtotal = form.min_subtotal.value;
+        if (minSubtotal) {
+            minSubtotal = minSubtotal.replace(/[^\d,]/g, '').replace(',', '.');
+            formData.set('min_subtotal', parseFloat(minSubtotal));
+        } else {
+            formData.delete('min_subtotal');
         }
         let url = '/api/v1/cupons';
         let method = 'POST';
@@ -194,6 +219,13 @@
             form.discount_value.value = 'R$ ' + Number(coupon.discount_value).toLocaleString('pt-BR', {minimumFractionDigits: 2});
         } else {
             form.discount_value.value = coupon.discount_value;
+        }
+
+        // Aplica a máscara ao valor mínimo do subtotal
+        if (coupon.min_subtotal) {
+            form.min_subtotal.value = 'R$ ' + Number(coupon.min_subtotal).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        } else {
+            form.min_subtotal.value = '';
         }
 
         form.expires_at.value = coupon.expires_at ?? '';
