@@ -60,6 +60,12 @@
                                     <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
                                     <td>R$ {{ number_format($order->subtotal, 2, ',', '.') }}</td>
                                 </tr>
+                                @if($order->desconto > 0)
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Desconto:@if($order->coupon) ({{ $order->coupon->code }})@endif</strong></td>
+                                    <td>- R$ {{ number_format($order->desconto, 2, ',', '.') }}</td>
+                                </tr>
+                                @endif
                                 <tr>
                                     <td colspan="3" class="text-end"><strong>Frete:</strong></td>
                                     <td>R$ {{ number_format($order->frete, 2, ',', '.') }}</td>
