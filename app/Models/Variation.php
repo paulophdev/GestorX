@@ -12,7 +12,8 @@ class Variation extends Model
     protected $fillable = [
         'product_id',
         'name',
-        'image'
+        'image',
+        'group',
     ];
 
     public function product()

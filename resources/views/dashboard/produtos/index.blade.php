@@ -26,29 +26,50 @@
       </div>
       <form id="productForm" enctype="multipart/form-data">
         <div class="modal-body">
-          <div class="row align-items-start">
-            <div class="col-md-5">
-              <div class="mb-3">
-                <label class="form-label">Imagem</label>
-                <input type="file" name="image" accept="image/*" class="form-control" id="imageInput">
-              </div>
-              <div class="w-100 text-center mb-3">
-                <img id="imagePreview" src="https://via.placeholder.com/200x200?text=Prévia" alt="Prévia da imagem" style="max-width: 220px; max-height: 220px; border-radius: 1rem; display: none; margin: 0 auto;" />
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs mb-3" id="productTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="dados-tab" data-bs-toggle="tab" data-bs-target="#dadosProduto" type="button" role="tab" aria-controls="dadosProduto" aria-selected="true">Dados do Produto</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="variacoes-tab" data-bs-toggle="tab" data-bs-target="#variacoesProduto" type="button" role="tab" aria-controls="variacoesProduto" aria-selected="false">Variações</button>
+            </li>
+          </ul>
+          <div class="tab-content">
+            <!-- Aba Dados do Produto -->
+            <div class="tab-pane fade show active" id="dadosProduto" role="tabpanel" aria-labelledby="dados-tab">
+              <div class="row align-items-start">
+                <div class="col-md-5">
+                  <div class="mb-3">
+                    <label class="form-label">Imagem</label>
+                    <input type="file" name="image" accept="image/*" class="form-control" id="imageInput">
+                  </div>
+                  <div class="w-100 text-center mb-3">
+                    <img id="imagePreview" src="https://via.placeholder.com/200x200?text=Prévia" alt="Prévia da imagem" style="max-width: 220px; max-height: 220px; border-radius: 1rem; display: none; margin: 0 auto;" />
+                  </div>
+                </div>
+                <div class="col-md-7">
+                  <div class="mb-3">
+                    <label class="form-label">Nome</label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Preço</label>
+                    <input type="text" name="price" class="form-control" required maxlength="15" inputmode="decimal" autocomplete="off">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Descrição</label>
+                    <textarea name="description" class="form-control" rows="2" maxlength="1000"></textarea>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="col-md-7">
-              <div class="mb-3">
-                <label class="form-label">Nome</label>
-                <input type="text" name="name" class="form-control" required>
+            <!-- Aba Variações -->
+            <div class="tab-pane fade" id="variacoesProduto" role="tabpanel" aria-labelledby="variacoes-tab">
+              <div id="variationGroups">
+                <!-- Grupos de variações serão inseridos aqui -->
               </div>
-              <div class="mb-3">
-                <label class="form-label">Preço</label>
-                <input type="text" name="price" class="form-control" required maxlength="15" inputmode="decimal" autocomplete="off">
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Descrição</label>
-                <textarea name="description" class="form-control" rows="2" maxlength="1000"></textarea>
-              </div>
+              <button type="button" class="btn btn-outline-primary btn-sm mt-3" onclick="addVariationGroup()">Adicionar Grupo de Variação</button>
             </div>
           </div>
         </div>
@@ -156,6 +177,9 @@
                 headers
             });
             if (response.ok) {
+                const product = await response.json();
+                // Salvar variações após salvar produto
+                await saveVariations(product.id);
                 productModal.hide();
                 loadProducts();
                 showToast(id ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!', 'success');
@@ -165,6 +189,27 @@
             }
         } catch (error) {
             console.error('Erro ao salvar produto:', error);
+        }
+    }
+
+    // Função para coletar e salvar variações
+    async function saveVariations(productId) {
+        const groups = document.querySelectorAll('#variationGroups .card');
+        // Remove todas as variações existentes antes de salvar novas (simples)
+        await fetch(`/api/v1/produtos/${productId}/variacoes`, { method: 'DELETE' });
+        for (const group of groups) {
+            const groupName = group.querySelector('input[type="text"]').value.trim();
+            const options = group.querySelectorAll('.variation-options input[type="text"]');
+            for (const opt of options) {
+                const optionName = opt.value.trim();
+                if (optionName) {
+                    await fetch(`/api/v1/produtos/${productId}/variacoes`, {
+                        method: 'POST',
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: optionName, group: groupName })
+                    });
+                }
+            }
         }
     }
 
@@ -186,6 +231,21 @@
             } else {
                 imagePreview.src = 'https://via.placeholder.com/200x200?text=Prévia';
                 imagePreview.style.display = 'none';
+            }
+            // Preencher variações
+            const variationGroupsDiv = document.getElementById('variationGroups');
+            variationGroupsDiv.innerHTML = '';
+            if (product.variations && product.variations.length > 0) {
+                // Agrupar por group
+                const groupMap = {};
+                product.variations.forEach(v => {
+                    const group = v.group || '';
+                    if (!groupMap[group]) groupMap[group] = [];
+                    groupMap[group].push(v.name);
+                });
+                Object.entries(groupMap).forEach(([group, options]) => {
+                    addVariationGroup(group, options);
+                });
             }
             productModal.show();
         } catch (error) {
@@ -226,6 +286,8 @@
         const imagePreview = document.getElementById('imagePreview');
         imagePreview.src = 'https://via.placeholder.com/200x200?text=Prévia';
         imagePreview.style.display = 'none';
+        // Limpar variações
+        document.getElementById('variationGroups').innerHTML = '';
         productModal.show();
     }
 
@@ -250,6 +312,44 @@
                 fontWeight: 600,
             },
         }).showToast();
+    }
+
+    // Variações - Frontend
+    let variationGroupCount = 0;
+    function addVariationGroup(name = '', options = []) {
+        variationGroupCount++;
+        const groupId = `variationGroup${variationGroupCount}`;
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'card mb-3';
+        groupDiv.innerHTML = `
+          <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+              <input type="text" class="form-control form-control-sm me-2" placeholder="Nome do Grupo (ex: Cores)" value="${name}" style="max-width:200px;">
+              <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.closest('.card').remove()">Remover Grupo</button>
+            </div>
+            <div class="variation-options mb-2"></div>
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="addVariationOption(this)">Adicionar Opção</button>
+          </div>
+        `;
+        document.getElementById('variationGroups').appendChild(groupDiv);
+        // Adiciona opções iniciais se houver
+        const optionsDiv = groupDiv.querySelector('.variation-options');
+        options.forEach(opt => addVariationOption(optionsDiv, opt));
+    }
+    function addVariationOption(btnOrDiv, value = '') {
+        let optionsDiv;
+        if (btnOrDiv.parentNode && btnOrDiv.parentNode.querySelector('.variation-options')) {
+            optionsDiv = btnOrDiv.parentNode.querySelector('.variation-options');
+        } else {
+            optionsDiv = btnOrDiv;
+        }
+        const optDiv = document.createElement('div');
+        optDiv.className = 'input-group input-group-sm mb-1';
+        optDiv.innerHTML = `
+          <input type="text" class="form-control" placeholder="Opção (ex: Azul)" value="${value}">
+          <button type="button" class="btn btn-outline-danger" onclick="this.parentNode.remove()">Remover</button>
+        `;
+        optionsDiv.appendChild(optDiv);
     }
 </script>
 @endpush 

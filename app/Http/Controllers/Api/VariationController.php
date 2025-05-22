@@ -19,7 +19,8 @@ class VariationController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|image|max:2048',
+            'group' => 'nullable|string|max:255',
         ]);
 
         $data = $request->all();
@@ -43,7 +44,8 @@ class VariationController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'image' => 'nullable|image|max:2048'
+            'image' => 'nullable|image|max:2048',
+            'group' => 'nullable|string|max:255',
         ]);
 
         $data = $request->all();
@@ -66,6 +68,17 @@ class VariationController extends Controller
             Storage::disk('public')->delete($variation->image);
         }
         $variation->delete();
+        return response()->json(null, 204);
+    }
+
+    public function destroyAll(Product $product)
+    {
+        foreach ($product->variations as $variation) {
+            if ($variation->image) {
+                \Storage::disk('public')->delete($variation->image);
+            }
+            $variation->delete();
+        }
         return response()->json(null, 204);
     }
 }

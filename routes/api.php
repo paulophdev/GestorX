@@ -24,6 +24,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/produtos/{product}/variacoes/{variation}', [VariationController::class, 'show']);
     Route::put('/produtos/{product}/variacoes/{variation}', [VariationController::class, 'update']);
     Route::delete('/produtos/{product}/variacoes/{variation}', [VariationController::class, 'destroy']);
+    Route::delete('/produtos/{product}/variacoes', [VariationController::class, 'destroyAll']);
 
     // Rotas de Cupons
     Route::apiResource('cupons', CouponController::class);
