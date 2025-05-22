@@ -282,7 +282,11 @@
                 }
 
                 try {
-                    const resp = await fetch(`/api/v1/cupons/validar/${cupom}`);
+                    // Enviar subtotal como query string via GET
+                    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                    let subtotal = 0;
+                    cart.forEach(item => { subtotal += item.price * item.qty; });
+                    const resp = await fetch(`/api/v1/cupons/validar/${cupom}?subtotal=${subtotal}`);
                     const data = await resp.json();
                     
                     if (resp.ok && data.valido) {

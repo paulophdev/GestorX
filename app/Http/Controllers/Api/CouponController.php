@@ -91,8 +91,16 @@ class CouponController extends Controller
             ], 400);
         }
 
-        // Calcula o desconto baseado no tipo do cupom
+        // Verifica valor mínimo do pedido
         $subtotal = request()->subtotal ?? 0;
+        if ($cupom->min_subtotal && $subtotal < $cupom->min_subtotal) {
+            return response()->json([
+                'valido' => false,
+                'mensagem' => 'Este cupom só pode ser aplicado em pedidos a partir de R$ ' . number_format($cupom->min_subtotal, 2, ',', '.')
+            ], 400);
+        }
+
+        // Calcula o desconto baseado no tipo do cupom
         $desconto = 0;
         if ($cupom->discount_type === 'percent') {
             $desconto = ($cupom->discount_value / 100) * $subtotal;
