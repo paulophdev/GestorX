@@ -28,11 +28,17 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
-# Copie o código do projeto
-COPY . /var/www
-
 # Configurando diretório de trabalho
 WORKDIR /var/www
+
+# Copia o código do projeto
+COPY . /var/www
+
+# Ajusta permissões
+RUN chown -R $user:$user /var/www
+
+# Instala as dependências do Composer
+RUN composer install --no-dev --optimize-autoloader
 
 # Copia o script de inicialização
 COPY docker/start.sh /start.sh
@@ -40,4 +46,4 @@ RUN chmod +x /start.sh
 
 USER $user
 
-ENTRYPOINT ["/start.sh"] 
+ENTRYPOINT ["/start.sh"]
