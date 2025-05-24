@@ -1,8 +1,8 @@
 FROM php:8.2-fpm
 
 # Argumentos definidos no docker-compose.yml
-ARG user
-ARG uid
+ARG user=myappuser
+ARG uid=1000
 
 # Instalando dependências do sistema
 RUN apt-get update && apt-get install -y \
