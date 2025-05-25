@@ -2,6 +2,18 @@
 
 Sistema de gestão de pedidos e dashboard administrativo.
 
+## Links de Acesso
+
+Para facilitar a visualização, o projeto está publicado e pode ser acessado através dos seguintes links:
+
+- **Loja**: https://gestorx.onrender.com
+- **Dashboard**: https://gestorx.onrender.com/dashboard
+
+## Imagens do Sistema
+
+![Loja GestorX](/public/loja.png)
+![Carrinho GestorX](/public/carrinho.png)
+
 ## Requisitos do Sistema
 
 - PHP 8.4.4
