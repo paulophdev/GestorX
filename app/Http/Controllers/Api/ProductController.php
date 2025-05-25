@@ -27,7 +27,7 @@ class ProductController extends Controller
         $data = $request->all();
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
+            $path = $request->file('image')->store('produtos', 'public');
             $data['image'] = $path;
         }
 
@@ -56,7 +56,7 @@ class ProductController extends Controller
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
-            $path = $request->file('image')->store('products', 'public');
+            $path = $request->file('image')->store('produtos', 'public');
             $data['image'] = $path;
         }
 
