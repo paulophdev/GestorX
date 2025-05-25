@@ -162,7 +162,7 @@
                 const cardsHtml = produtosComEstoque.map(product => `
                     <div class=\"col-md-4 col-lg-3\">
                       <div class=\"card h-100\" style=\"border:1px solid #e5e7eb; border-radius:1rem; background:#fff; box-shadow:none;\">
-                        <img src=\"${product.image ? '/storage/' + product.image : 'https://via.placeholder.com/300x200?text=Sem+Imagem'}\" class=\"card-img-top\" alt=\"${product.name}\" style=\"border-radius:1rem 1rem 0 0;\">
+                        <img src=\"${product.image ? '/' + product.image : 'https://via.placeholder.com/300x200?text=Sem+Imagem'}\" class=\"card-img-top\" alt=\"${product.name}\" style=\"border-radius:1rem 1rem 0 0;\">
                         <div class=\"card-body d-flex flex-column\">
                           <h5 class=\"card-title\" style=\"color:#111827; font-weight:600;\">${product.name}</h5>
                           <p class=\"card-text mb-2\" style=\"color:#6b7280; font-size:0.95em;\">${product.description ? product.description : ''}</p>
@@ -207,7 +207,7 @@
                 // Pré-carrega todas as imagens
                 const images = [];
                 produtosComEstoque.forEach(product => {
-                    const src = product.image ? '/storage/' + product.image : 'https://via.placeholder.com/300x200?text=Sem+Imagem';
+                    const src = product.image ? '/' + product.image : 'https://via.placeholder.com/300x200?text=Sem+Imagem';
                     images.push(new Promise(resolve => {
                         const img = new window.Image();
                         img.onload = () => resolve();

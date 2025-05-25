@@ -10,7 +10,13 @@ fi
 php artisan key:generate
 php artisan config:cache
 php artisan migrate --force
-php artisan storage:link
+# php artisan storage:link
 
-# Inicia o servidor
-php artisan serve --host=0.0.0.0 --port=10000
+# Verifica o ambiente e inicia o servidor apropriado
+if [ "$APP_ENV" = "local" ]; then
+    echo "Ambiente de desenvolvimento detectado. Iniciando servidor de desenvolvimento..."
+    exec php artisan serve --host=0.0.0.0 --port=10000
+else
+    echo "Ambiente de produção detectado. Iniciando PHP-FPM..."
+    exec php-fpm
+fi
